@@ -1,0 +1,58 @@
+import discord
+from discord.ext import commands
+import requests
+
+# Create an instance of the bot
+bot = commands.Bot(command_prefix='!')
+
+# Define the survey questions
+survey_questions = [
+    "On a scale of 1 to 10, how satisfied are you with your current study routine?",
+    "How many hours do you usually study per day?",
+    "Do you take regular breaks during your study sessions? (yes/no)",
+    "Do you have a specific study area? (yes/no)",
+    "Do you set specific goals for each study session? (yes/no)"
+]
+
+# Dictionary to store user responses
+user_responses = {}
+
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user.name}')
+
+@bot.command(name='start_survey')
+async def start_survey(ctx):
+    user_id = ctx.author.id
+
+    # Check if the user has already started a survey
+    if user_id in user_responses:
+        await ctx.send("You have already started the survey.")
+    else:
+        await ctx.send("Welcome to the study routine survey! Answer the following questions:")
+        user_responses[user_id] = {}
+        for question in survey_questions:
+            await ctx.send(question)
+            response = await bot.wait_for('message', check=lambda m: m.author == ctx.author, timeout=60)
+            user_responses[user_id][question] = response.content
+
+        await ctx.send("Thank you for completing the survey!")
+
+@bot.command(name='get_study_tips')
+async def get_study_tips(ctx):
+    user_id = ctx.author.id
+
+    # Check if the user has completed the survey
+    if user_id not in user_responses or len(user_responses[user_id]) != len(survey_questions):
+        await ctx.send("Please complete the survey first by using the !start_survey command.")
+    else:
+        # You can use the user responses to generate study tips using a separate AI or logic.
+        # For simplicity, let's just display the collected responses.
+        tips_message = "Here are your survey responses:\n"
+        for question, answer in user_responses[user_id].items():
+            tips_message += f"{question}: {answer}\n"
+
+        await ctx.send(tips_message)
+
+# Run the bot with your token
+bot.run('MTE5NDE4OTAwNDYyNzc3MTQxMg.G-KyCd.Bb0rmn22rKKSFnQPy_MHz4Axj9mw4Qt-mslA94')
